@@ -175,6 +175,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetAxisDeactivated(bool bIsDeactivated, EActions Axis);
 
+	UFUNCTION(BlueprintCallable)
+	void ResetAxisDeactivated();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

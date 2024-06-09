@@ -230,6 +230,14 @@ void UStabilizationComponentBase::ApplyML(ADroneBase* Drone, float Scale, float 
 	MLVariables.DeltaBR = 0.0f;
 }
 
+void UStabilizationComponentBase::ResetAxisDeactivated()
+{
+	AxisDeactivated.bFrontBack = false;
+	AxisDeactivated.bLeftRight = false;
+	AxisDeactivated.bRotation = false;
+	AxisDeactivated.bVertical = false;
+}
+
 
 // Called every frame
 void UStabilizationComponentBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

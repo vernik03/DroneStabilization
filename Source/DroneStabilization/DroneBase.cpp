@@ -2,7 +2,7 @@
 
 
 #include "DroneBase.h"
-
+#include "StabilizationComponentBase.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -26,6 +26,8 @@ ADroneBase::ADroneBase()
 
 	PhysicsThrusterFR = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("PhysicsThrusterFR"));
 	PhysicsThrusterFR->SetupAttachment(DroneMesh);
+
+	StabilizationComponent = CreateDefaultSubobject<UStabilizationComponentBase>(TEXT("StabilizationComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -65,7 +67,7 @@ void ADroneBase::ResetDrone()
 	SetActorLocation(StartLocation);
 	SetActorRotation(FRotator(0, 0, 0));
 	DroneMesh->ResetAllBodiesSimulatePhysics();
-	OnResetDroneInBP();
+	StabilizationComponent->ResetAxisDeactivated();
 	FR_TickPower = 0.0f;
 	FL_TickPower = 0.0f;
 	BL_TickPower = 0.0f;

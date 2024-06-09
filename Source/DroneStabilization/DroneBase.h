@@ -9,6 +9,7 @@
 #include "DroneBase.generated.h"
 
 class USkeletalMeshComponent;
+class UStabilizationComponentBase;
 
 UCLASS()
 class DRONESTABILIZATION_API ADroneBase : public APawn
@@ -34,6 +35,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UPhysicsThrusterComponent* PhysicsThrusterFR;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TObjectPtr<UStabilizationComponentBase> StabilizationComponent;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Engines")
 	float FR_TickPower = 0.0f;
@@ -87,9 +91,6 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetDrone();
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnResetDroneInBP();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAddRandomImpulse();
