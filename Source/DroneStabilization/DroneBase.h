@@ -50,10 +50,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Parameters")
 	FVector StartLocation;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
 	bool bIsStabilizationEnabled = false;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
 	bool bIsNeuralStabilization = false;
 
 
@@ -61,22 +61,22 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadWrite, Category="Engines")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Engines")
 	bool bIsEnginesActivated = false;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Engines")
 	float ThrustStrengthBase = 200.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Engines")
 	float AdditionalRotationPowerFirst = 8.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Engines")
 	float AdditionalRotationPowerSecond = 3.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Parameters")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Gamepad")
 	float DynamicForceFeedbackDivider = 400.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
 	bool bIsAgent = true;
 
 	UFUNCTION(BlueprintCallable)
