@@ -159,6 +159,77 @@ void UStabilizationComponentBase::ApplyPID(ADroneBase* Drone, float Scale, float
 	PIDVariables.DeltaFR = 0.0f;
 }
 
+void UStabilizationComponentBase::AllAxisML(ADroneBase* Drone, EActions Axis, float FL, float FR, float BL, float BR, float Multiplier, float Min, float Max, FSmoothParametersML SmoothParameters)
+{
+	bool bIsDeactivated = false;
+	float MultiplierParameter = 0.0f;
+	switch (Axis)
+	{
+	case EActions::Vertical:
+		bIsDeactivated = AxisDeactivated.bVertical;
+		break;
+	case EActions::Rotation:
+		bIsDeactivated = AxisDeactivated.bRotation;
+		break;
+	case EActions::LeftRight:
+		bIsDeactivated = AxisDeactivated.bLeftRight || AxisDeactivated.bVertical;
+		break;
+	case EActions::FrontBack:
+		bIsDeactivated = AxisDeactivated.bFrontBack || AxisDeactivated.bVertical;
+		break;
+	}
+
+	MultiplierParameter = !bIsDeactivated ? 1.0f : CheckRotationML(Drone, Axis, SmoothParameters.Divider, SmoothParameters.Min, SmoothParameters.Max);
+
+	float MultiplierLocal = Multiplier * MultiplierParameter;
+	MLVariables.DeltaFL = FMath::Clamp(FL * MultiplierLocal + MLVariables.DeltaFL, Min, Max);
+	MLVariables.DeltaFR = FMath::Clamp(FR * MultiplierLocal + MLVariables.DeltaFR, Min, Max);
+	MLVariables.DeltaBL = FMath::Clamp(BL * MultiplierLocal + MLVariables.DeltaBL, Min, Max);
+	MLVariables.DeltaBR = FMath::Clamp(BR * MultiplierLocal + MLVariables.DeltaBR, Min, Max);
+}
+
+float UStabilizationComponentBase::CheckRotationML(ADroneBase* Drone, EActions Axis, float Divider, float Min, float Max)
+{
+	float MultiplierParameter = 0.0f;
+	if (Axis == EActions::FrontBack)
+	{
+		if (abs(Drone->GetActorRotation().Pitch) > Min && abs(Drone->GetActorRotation().Pitch) < Max)
+		{
+			MultiplierParameter = (abs(Drone->GetActorRotation().Pitch) - Min) / Divider;
+		}
+		else if (abs(Drone->GetActorRotation().Pitch) > Max)
+		{
+			MultiplierParameter = 1.0f;
+		}
+	}
+	else if (Axis == EActions::LeftRight)
+	{
+		if (abs(Drone->GetActorRotation().Roll) > Min && abs(Drone->GetActorRotation().Roll) < Max)
+		{
+			MultiplierParameter = (abs(Drone->GetActorRotation().Roll) - Min) / Divider;
+		}
+		else if (abs(Drone->GetActorRotation().Roll) > Max)
+		{
+			MultiplierParameter = 1.0f;
+		}
+	}
+
+	return  MultiplierParameter;
+}
+
+void UStabilizationComponentBase::ApplyML(ADroneBase* Drone, float Scale, float Delta, float Min, float Max)
+{
+	Drone->FL_TickPower = FMath::Clamp(FMath::Clamp(Drone->FL_TickPower + MLVariables.DeltaFL * Scale, Drone->FL_TickPower - Delta, Drone->FL_TickPower + Delta), Min, Max);
+	Drone->FR_TickPower = FMath::Clamp(FMath::Clamp(Drone->FR_TickPower + MLVariables.DeltaFR * Scale, Drone->FR_TickPower - Delta, Drone->FR_TickPower + Delta), Min, Max);
+	Drone->BL_TickPower = FMath::Clamp(FMath::Clamp(Drone->BL_TickPower + MLVariables.DeltaBL * Scale, Drone->BL_TickPower - Delta, Drone->BL_TickPower + Delta), Min, Max);
+	Drone->BR_TickPower = FMath::Clamp(FMath::Clamp(Drone->BR_TickPower + MLVariables.DeltaBR * Scale, Drone->BR_TickPower - Delta, Drone->BR_TickPower + Delta), Min, Max);
+
+	MLVariables.DeltaFL = 0.0f;
+	MLVariables.DeltaFR = 0.0f;
+	MLVariables.DeltaBL = 0.0f;
+	MLVariables.DeltaBR = 0.0f;
+}
+
 
 // Called every frame
 void UStabilizationComponentBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

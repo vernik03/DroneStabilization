@@ -48,8 +48,6 @@ void ADroneBase::ActiviteAllEngines(bool bActivate)
 	PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase * bActivate;
 	PhysicsThrusterBL->ThrustStrength = ThrustStrengthBase * bActivate;
 	PhysicsThrusterBR->ThrustStrength = ThrustStrengthBase * bActivate;
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Engines Activated: %f"), PhysicsThrusterFR->ThrustStrength));
 }
 
 FVector ADroneBase::CalculateCenterOfMass()
