@@ -45,6 +45,9 @@ void UStabilizationComponentBase::BeginPlay()
 
 float UStabilizationComponentBase::PIDFuntion(float CurrentValue, FStabilizationParametersPID Parameters, float DeltaTime, float& Integral, float& ErrorPrior)
 {
+	
+	//Original variant from tutorial
+	/*
 	float PErrorPrior = ErrorPrior;
 	float PIntegral = Integral;
 	float PError = CurrentValue - Parameters.DesiredValue;
@@ -52,7 +55,14 @@ float UStabilizationComponentBase::PIDFuntion(float CurrentValue, FStabilization
 	float PDerivative = (PError - PErrorPrior) / DeltaTime;
 	Integral = PIntegral;
 	ErrorPrior = PError;
-	return -(Parameters.P * PError + Parameters.I * PIntegral + Parameters.D * PDerivative + Parameters.Bias);
+	return -(Parameters.P * PError + Parameters.I * PIntegral + Parameters.D * PDerivative + Parameters.Bias);*/
+
+	const float PError = CurrentValue - Parameters.DesiredValue;
+	Integral += PError * DeltaTime;
+	const float PDerivative = (PError - ErrorPrior) / DeltaTime;
+	ErrorPrior = PError;
+
+	return -(Parameters.P * PError + Parameters.I * Integral + Parameters.D * PDerivative + Parameters.Bias);
 }
 
 void UStabilizationComponentBase::VerticalPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max)
