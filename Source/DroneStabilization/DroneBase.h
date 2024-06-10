@@ -23,7 +23,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<USkeletalMeshComponent> DroneMesh;
 
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UPhysicsThrusterComponent* PhysicsThrusterBR;
 
@@ -39,34 +38,34 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<UStabilizationComponentBase> StabilizationComponent;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
 	float FR_TickPower = 0.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
 	float FL_TickPower = 0.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
 	float BR_TickPower = 0.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Engines")
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
 	float BL_TickPower = 0.0f;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Parameters")
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Parameters")
 	FVector StartLocation;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, Replicated, EditAnywhere, Category = "Stabilization")
 	bool bIsStabilizationEnabled = false;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, Replicated, EditAnywhere, Category = "Stabilization")
 	bool bIsNeuralStabilization = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated, Category = "Engines")
+	bool bIsEnginesActivated = false;
 
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Engines")
-	bool bIsEnginesActivated = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Engines")
 	float ThrustStrengthBase = 200.0f;
@@ -115,6 +114,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+
+
+
 	
 };

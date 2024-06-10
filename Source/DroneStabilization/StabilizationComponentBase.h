@@ -169,7 +169,7 @@ public:
 	// Sets default values for this component's properties
 	UStabilizationComponentBase();
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated, Category = "Stabilization")
 	FAxisDeactivated AxisDeactivated;
 
 	UFUNCTION(BlueprintCallable)
@@ -182,10 +182,10 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated, Category = "Stabilization")
 	FPIDVariables PIDVariables;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated, Category = "Stabilization")
 	FMLVariables MLVariables;
 
 	UFUNCTION(BlueprintCallable)
@@ -218,6 +218,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 		
 	

@@ -4,6 +4,7 @@
 #include "DroneBase.h"
 #include "StabilizationComponentBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -11,6 +12,8 @@ ADroneBase::ADroneBase()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+    AActor::SetReplicateMovement(true);
 
 	DroneMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("DroneMesh"));
 	RootComponent = DroneMesh;
@@ -50,6 +53,8 @@ void ADroneBase::ActiviteAllEngines(bool bActivate)
 	PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase * bActivate;
 	PhysicsThrusterBL->ThrustStrength = ThrustStrengthBase * bActivate;
 	PhysicsThrusterBR->ThrustStrength = ThrustStrengthBase * bActivate;
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Engines Activated: %s"), bActivate ? TEXT("True") : TEXT("False")));
 }
 
 FVector ADroneBase::CalculateCenterOfMass()
@@ -137,6 +142,16 @@ void ADroneBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (HasAuthority())
+	{
+
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("server bIsEnginesActivated: %d"), bIsEnginesActivated));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("client bIsEnginesActivated: %d"), bIsEnginesActivated));
+	}
+
 	if (bIsEnginesActivated)
 	{
 		PhysicsThrusterFR->ThrustStrength = ThrustStrengthBase + FR_TickPower;
@@ -154,15 +169,17 @@ void ADroneBase::Tick(float DeltaTime)
 		DroneMesh->AddTorqueInDegrees(FVector(0.0f, 0.0f, TorqueBL), "Fan_BL_end", true);
 		DroneMesh->AddTorqueInDegrees(FVector(0.0f, 0.0f, TorqueBR), "Fan_BR_end", true);
 
-		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterFR->ThrustStrength/DynamicForceFeedbackDivider, 0.1f, false, false, false, true, EDynamicForceFeedbackAction::Start);
-		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterFL->ThrustStrength/DynamicForceFeedbackDivider, 0.1f, false, true, false, false, EDynamicForceFeedbackAction::Start);
-		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterBL->ThrustStrength/DynamicForceFeedbackDivider, 0.1f, true, false, false, false, EDynamicForceFeedbackAction::Start);
-		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterBR->ThrustStrength/DynamicForceFeedbackDivider, 0.1f, false, false, true, false, EDynamicForceFeedbackAction::Start);
-
 		FR_TickPower= 0.0f;
 		FL_TickPower= 0.0f;
 		BL_TickPower= 0.0f;
 		BR_TickPower= 0.0f;
+	}
+	if (bIsEnginesActivated && !HasAuthority())
+	{
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterFR->ThrustStrength / DynamicForceFeedbackDivider, 0.1f, false, false, false, true, EDynamicForceFeedbackAction::Start);
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterFL->ThrustStrength / DynamicForceFeedbackDivider, 0.1f, false, true, false, false, EDynamicForceFeedbackAction::Start);
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterBL->ThrustStrength / DynamicForceFeedbackDivider, 0.1f, true, false, false, false, EDynamicForceFeedbackAction::Start);
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayDynamicForceFeedback(PhysicsThrusterBR->ThrustStrength / DynamicForceFeedbackDivider, 0.1f, false, false, true, false, EDynamicForceFeedbackAction::Start);
 	}
 }
 
@@ -171,6 +188,20 @@ void ADroneBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ADroneBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADroneBase, bIsEnginesActivated);
+	DOREPLIFETIME(ADroneBase, FR_TickPower);
+	DOREPLIFETIME(ADroneBase, FL_TickPower);
+	DOREPLIFETIME(ADroneBase, BL_TickPower);
+	DOREPLIFETIME(ADroneBase, BR_TickPower);
+	DOREPLIFETIME(ADroneBase, StartLocation);
+	DOREPLIFETIME(ADroneBase, bIsStabilizationEnabled);
+	DOREPLIFETIME(ADroneBase, bIsNeuralStabilization);
 }
 
 

@@ -3,6 +3,8 @@
 
 #include "StabilizationComponentBase.h"
 
+#include "Net/UnrealNetwork.h"
+
 
 // Sets default values for this component's properties
 UStabilizationComponentBase::UStabilizationComponentBase()
@@ -255,5 +257,14 @@ void UStabilizationComponentBase::TickComponent(float DeltaTime, ELevelTick Tick
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UStabilizationComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UStabilizationComponentBase, PIDVariables);
+	DOREPLIFETIME(UStabilizationComponentBase, MLVariables);
+	DOREPLIFETIME(UStabilizationComponentBase, AxisDeactivated);
 }
 
