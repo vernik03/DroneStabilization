@@ -11,6 +11,25 @@
 class USkeletalMeshComponent;
 class UStabilizationComponentBase;
 
+USTRUCT(BlueprintType)
+struct FActionsUsed
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bVertical = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bRotation = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bLeftRight = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bFrontBack = false;
+};
+
 UCLASS()
 class DRONESTABILIZATION_API ADroneBase : public APawn
 {
@@ -106,6 +125,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void LeftRightMovement(float ActionValue, float Magnitude, float Limiter);
 
+	FActionsUsed ActionsUsed;
 
 public:	
 	// Called every frame

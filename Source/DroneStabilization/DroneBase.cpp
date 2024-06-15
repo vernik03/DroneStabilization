@@ -90,50 +90,70 @@ void ADroneBase::ResetDrone()
 
 void ADroneBase::VerticalMovement(float ActionValue, float Magnitude)
 {
-	float LocalActionValue = FMath::Clamp(ActionValue, -10.0f, 3.0f);
-	LocalActionValue = LocalActionValue * Magnitude;
-	FR_TickPower = FMath::Clamp(LocalActionValue + FR_TickPower, -ThrustStrengthBase, 10000);
-	FL_TickPower = FMath::Clamp(LocalActionValue + FL_TickPower, -ThrustStrengthBase, 10000);
-	BL_TickPower = FMath::Clamp(LocalActionValue + BL_TickPower, -ThrustStrengthBase, 10000);
-	BR_TickPower = FMath::Clamp(LocalActionValue + BR_TickPower, -ThrustStrengthBase, 10000);
+	if (!ActionsUsed.bVertical)
+	{
+		float LocalActionValue = FMath::Clamp(ActionValue, -10.0f, 3.0f);
+		LocalActionValue = LocalActionValue * Magnitude;
+		FR_TickPower = FMath::Clamp(LocalActionValue + FR_TickPower, -ThrustStrengthBase, 10000);
+		FL_TickPower = FMath::Clamp(LocalActionValue + FL_TickPower, -ThrustStrengthBase, 10000);
+		BL_TickPower = FMath::Clamp(LocalActionValue + BL_TickPower, -ThrustStrengthBase, 10000);
+		BR_TickPower = FMath::Clamp(LocalActionValue + BR_TickPower, -ThrustStrengthBase, 10000);
+
+		ActionsUsed.bVertical = true;
+	}
 }
 
 void ADroneBase::RotationMovement(float ActionValue, float Magnitude)
 {
-	const float LocalActionValue = FMath::Clamp(ActionValue, -3.0f, 3.0f);
-	FR_TickPower += (LocalActionValue * (-Magnitude));
-	FL_TickPower += (LocalActionValue * Magnitude);
-	BL_TickPower += (LocalActionValue * (-Magnitude));
-	BR_TickPower += (LocalActionValue * Magnitude);
+	if (!ActionsUsed.bRotation)
+	{
+		const float LocalActionValue = FMath::Clamp(ActionValue, -3.0f, 3.0f);
+		FR_TickPower += (LocalActionValue * (-Magnitude));
+		FL_TickPower += (LocalActionValue * Magnitude);
+		BL_TickPower += (LocalActionValue * (-Magnitude));
+		BR_TickPower += (LocalActionValue * Magnitude);
+
+		ActionsUsed.bRotation = true;
+	}
 }
 
 void ADroneBase::FrontBackMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
-	if (ActionValue >= 0)
+	if (!ActionsUsed.bFrontBack)
 	{
-		FR_TickPower += (LocalActionValue * Magnitude);
-		FL_TickPower += (LocalActionValue * Magnitude);		
-	}
-	else
-	{
-		BL_TickPower += (LocalActionValue * Magnitude);
-		BR_TickPower += (LocalActionValue * Magnitude);
+		const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
+		if (ActionValue >= 0)
+		{
+			FR_TickPower += (LocalActionValue * Magnitude);
+			FL_TickPower += (LocalActionValue * Magnitude);		
+		}
+		else
+		{
+			BL_TickPower += (LocalActionValue * Magnitude);
+			BR_TickPower += (LocalActionValue * Magnitude);
+		}
+
+		ActionsUsed.bFrontBack = true;
 	}
 }
 
 void ADroneBase::LeftRightMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
-	if (ActionValue >= 0)
+	if (!ActionsUsed.bLeftRight)
 	{
-		FL_TickPower += (LocalActionValue * Magnitude);
-		BL_TickPower += (LocalActionValue * Magnitude);		
-	}
-	else
-	{
-		FR_TickPower += (LocalActionValue * Magnitude);
-		BR_TickPower += (LocalActionValue * Magnitude);
+		const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
+		if (ActionValue >= 0)
+		{
+			FL_TickPower += (LocalActionValue * Magnitude);
+			BL_TickPower += (LocalActionValue * Magnitude);
+		}
+		else
+		{
+			FR_TickPower += (LocalActionValue * Magnitude);
+			BR_TickPower += (LocalActionValue * Magnitude);
+		}
+
+		ActionsUsed.bLeftRight = true;
 	}
 }
 
@@ -145,11 +165,11 @@ void ADroneBase::Tick(float DeltaTime)
 	if (HasAuthority())
 	{
 
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("server bIsEnginesActivated: %d"), bIsEnginesActivated));
+		UE_LOG(LogTemp, Display, TEXT("DeltaTime: %f"), DeltaTime);
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("client bIsEnginesActivated: %d"), bIsEnginesActivated));
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("client DeltaTime: %f"), DeltaTime));
 	}
 
 	if (bIsEnginesActivated)
@@ -173,6 +193,11 @@ void ADroneBase::Tick(float DeltaTime)
 		FL_TickPower= 0.0f;
 		BL_TickPower= 0.0f;
 		BR_TickPower= 0.0f;
+
+		ActionsUsed.bVertical = false;
+		ActionsUsed.bRotation = false;
+		ActionsUsed.bFrontBack = false;
+		ActionsUsed.bLeftRight = false;
 	}
 	if (bIsEnginesActivated && !HasAuthority())
 	{
