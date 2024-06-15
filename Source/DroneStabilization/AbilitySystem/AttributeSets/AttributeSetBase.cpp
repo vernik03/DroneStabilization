@@ -23,7 +23,7 @@ void UAttributeSetBase::OnRep_Health(const FGameplayAttributeData& OldHealth)
 
 void UAttributeSetBase::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UAttributeSetBase, Health, OldMaxHealth);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UAttributeSetBase, MaxHealth, OldMaxHealth);
 }
 
 void UAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
