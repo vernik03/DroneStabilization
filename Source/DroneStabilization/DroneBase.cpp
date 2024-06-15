@@ -6,6 +6,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/AttributeSets/AttributeSetBase.h"
+#include "DataAssets/DroneDataAsset.h"
+#include "AbilitySystem/Components/AbilitySystemComponentBase.h"
+
+
 
 // Sets default values
 ADroneBase::ADroneBase()
@@ -31,6 +38,13 @@ ADroneBase::ADroneBase()
 	PhysicsThrusterFR->SetupAttachment(DroneMesh);
 
 	StabilizationComponent = CreateDefaultSubobject<UStabilizationComponentBase>(TEXT("StabilizationComponent"));
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponentBase>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	AttributeSet = CreateDefaultSubobject<UAttributeSetBase>(TEXT("AttributeSet"));
+
 }
 
 // Called when the game starts or when spawned
@@ -40,6 +54,90 @@ void ADroneBase::BeginPlay()
 	ActiviteAllEngines(false);
 	StartLocation = GetActorLocation();
 	DroneMesh->SetCenterOfMass(CalculateCenterOfMass());
+}
+
+bool ADroneBase::ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect,
+	FGameplayEffectContextHandle InEffectContext)
+{
+	if (!Effect.Get()) return false;
+
+	FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(Effect, 1, InEffectContext);
+
+	if (SpecHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+		return ActiveGEHandle.WasSuccessfullyApplied();
+	}
+
+	return false;
+}
+
+UAbilitySystemComponent* ADroneBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+FDroneData ADroneBase::GetDroneData() const
+{
+	return DroneData;
+}
+
+void ADroneBase::SetDroneData(const FDroneData& InDroneData)
+{	
+	DroneData = InDroneData;
+	InitFromDroneData(DroneData);
+}
+
+void ADroneBase::GiveAbilities()
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (auto DefaultAbility : DroneData.Abilities)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DefaultAbility));
+		}
+	}
+}
+
+void ADroneBase::ApplyStartupEffects()
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		for (auto DefaultEffect : DroneData.Effects)
+		{
+			ApplyGameplayEffectToSelf(DefaultEffect, EffectContext);
+		}
+	}
+}
+
+void ADroneBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	GiveAbilities();
+	ApplyStartupEffects();
+}
+
+void ADroneBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}
+
+void ADroneBase::OnRep_DroneData()
+{
+
+	InitFromDroneData(DroneData, true);
+}
+
+void ADroneBase::InitFromDroneData(const FDroneData InDroneData, bool bFromReplication)
+{
 }
 
 void ADroneBase::ActiviteAllEngines(bool bActivate)
@@ -53,8 +151,6 @@ void ADroneBase::ActiviteAllEngines(bool bActivate)
 	PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase * bActivate;
 	PhysicsThrusterBL->ThrustStrength = ThrustStrengthBase * bActivate;
 	PhysicsThrusterBR->ThrustStrength = ThrustStrengthBase * bActivate;
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Engines Activated: %s"), bActivate ? TEXT("True") : TEXT("False")));
 }
 
 FVector ADroneBase::CalculateCenterOfMass()
@@ -215,6 +311,16 @@ void ADroneBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 }
 
+void ADroneBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (IsValid(DroneDataAsset))
+	{
+		SetDroneData(DroneDataAsset->DroneData);
+	}
+}
+
 void ADroneBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -227,6 +333,7 @@ void ADroneBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 	DOREPLIFETIME(ADroneBase, StartLocation);
 	DOREPLIFETIME(ADroneBase, bIsStabilizationEnabled);
 	DOREPLIFETIME(ADroneBase, bIsNeuralStabilization);
-}
+	DOREPLIFETIME(ADroneBase, DroneData);
 
+}
 

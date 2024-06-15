@@ -6,17 +6,24 @@
 #include "GameFramework/Pawn.h"
 #include <PhysicsEngine/PhysicsThruster.h>
 #include <PhysicsEngine/PhysicsThrusterComponent.h>
+#include "AbilitySystemInterface.h"
+#include "Abilities/GameplayAbility.h"
+#include "AbilitySystemReplicationProxyInterface.h"
+#include "DroneDataTypes.h"
 #include "DroneBase.generated.h"
 
 class USkeletalMeshComponent;
 class UStabilizationComponentBase;
+class UAbilitySystemComponentBase;
+class UAttributeSetBase;
+class UGameplayAbility;
+class UGameplayEffect;
 
 USTRUCT(BlueprintType)
 struct FActionsUsed
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
-public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bVertical = false;
 
@@ -31,13 +38,74 @@ public:
 };
 
 UCLASS()
-class DRONESTABILIZATION_API ADroneBase : public APawn
+class DRONESTABILIZATION_API ADroneBase : public APawn, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties
 	ADroneBase();
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void PostInitializeComponents() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+
+	bool ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect, FGameplayEffectContextHandle InEffectContext);
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION(BlueprintCallable)
+	FDroneData GetDroneData() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetDroneData(const FDroneData& InDroneData);
+
+	UFUNCTION(BlueprintCallable)
+	void ActiviteAllEngines(bool bActivate);
+
+	UFUNCTION(BlueprintCallable)
+	FVector CalculateCenterOfMass();
+
+	UFUNCTION(BlueprintCallable)
+	void ResetDrone();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnAddRandomImpulse();
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void VerticalMovement(float ActionValue, float Magnitude);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void RotationMovement(float ActionValue, float Magnitude);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void FrontBackMovement(float ActionValue, float Magnitude, float Limiter);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void LeftRightMovement(float ActionValue, float Magnitude, float Limiter);
+
+protected:
+
+	virtual void BeginPlay() override;
+
+	void GiveAbilities();
+
+	void ApplyStartupEffects();
+
+	virtual void PossessedBy(AController* NewController) override;
+
+	virtual void OnRep_PlayerState() override;
+
+	UFUNCTION()
+	void OnRep_DroneData();
+
+	virtual void InitFromDroneData(const FDroneData InDroneData, bool bFromReplication = false);
+
+public:
+	FActionsUsed ActionsUsed;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<USkeletalMeshComponent> DroneMesh;
@@ -81,11 +149,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated, Category = "Engines")
 	bool bIsEnginesActivated = false;
 
-
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Engines")
 	float ThrustStrengthBase = 200.0f;
 
@@ -101,42 +165,15 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stabilization")
 	bool bIsAgent = true;
 
-	UFUNCTION(BlueprintCallable)
-	void ActiviteAllEngines(bool bActivate);
+	UPROPERTY(EditDefaultsOnly)
+	UAbilitySystemComponentBase* AbilitySystemComponent;
 
-	UFUNCTION(BlueprintCallable)
-	FVector CalculateCenterOfMass();
+	UPROPERTY(Transient)
+	UAttributeSetBase* AttributeSet;
 
-	UFUNCTION(BlueprintCallable)
-	void ResetDrone();
+	UPROPERTY(ReplicatedUsing = OnRep_DroneData)
+	FDroneData DroneData;
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnAddRandomImpulse();
-
-	UFUNCTION(BlueprintCallable, Category="Actions")
-	void VerticalMovement(float ActionValue, float Magnitude);
-
-	UFUNCTION(BlueprintCallable, Category = "Actions")
-	void RotationMovement(float ActionValue, float Magnitude);
-
-	UFUNCTION(BlueprintCallable, Category = "Actions")
-	void FrontBackMovement(float ActionValue, float Magnitude, float Limiter);
-
-	UFUNCTION(BlueprintCallable, Category = "Actions")
-	void LeftRightMovement(float ActionValue, float Magnitude, float Limiter);
-
-	FActionsUsed ActionsUsed;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
-
-
-
-	
+	UPROPERTY(EditDefaultsOnly)
+	class UDroneDataAsset* DroneDataAsset;
 };

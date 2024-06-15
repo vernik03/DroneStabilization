@@ -19,9 +19,8 @@ enum class EActions : uint8
 USTRUCT(BlueprintType)
 struct FStabilizationParametersPID
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
-public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float DesiredValue = 0.0f;
 
@@ -41,9 +40,8 @@ public:
 USTRUCT(BlueprintType)
 struct FAxisDeactivated
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
-public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bVertical = false;
 
@@ -60,9 +58,8 @@ public:
 USTRUCT(BlueprintType)
 struct FPIDVariables
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
-public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float VerticalIntegral = 0.0f;
 
@@ -103,9 +100,8 @@ public:
 USTRUCT(BlueprintType)
 struct FMLVariables
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
-public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float DeltaFL = 0.0f;
 
@@ -122,8 +118,7 @@ public:
 USTRUCT(BlueprintType)
 struct FSmoothParametersPID
 {
-	GENERATED_BODY()
-public:
+	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float VelocityDivider = 0.0f;
@@ -145,8 +140,8 @@ public:
 USTRUCT(BlueprintType)
 struct FSmoothParametersML
 {
-	GENERATED_BODY()
-public:
+	GENERATED_USTRUCT_BODY()
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Divider = 30.0f;
 
