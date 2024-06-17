@@ -22,9 +22,6 @@ struct FStabilizationParametersPID
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	float DesiredValue = 0.0f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float P = 0.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -184,7 +181,7 @@ protected:
 	FMLVariables MLVariables;
 
 	UFUNCTION(BlueprintCallable)
-	float PIDFuntion(float CurrentValue, FStabilizationParametersPID Parameters, float DeltaTime, float& Integral, float& ErrorPrior);
+	float PIDFuntion(float CurrentValue, float DesiredValue, FStabilizationParametersPID Parameters, float DeltaTime, float& Integral, float& ErrorPrior);
 
 	UFUNCTION(BlueprintCallable)
 	void VerticalPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max);

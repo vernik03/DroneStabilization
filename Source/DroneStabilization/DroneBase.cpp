@@ -1,3 +1,4 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
@@ -184,7 +185,7 @@ void ADroneBase::ResetDrone()
 	}
 }
 
-void ADroneBase::VerticalMovement(float ActionValue, float Magnitude)
+void ADroneBase::VerticalMovement(float ActionValue, float Magnitude, float Limiter)
 {
 	if (!ActionsUsed.bVertical)
 	{
@@ -199,23 +200,28 @@ void ADroneBase::VerticalMovement(float ActionValue, float Magnitude)
 	}
 }
 
-void ADroneBase::RotationMovement(float ActionValue, float Magnitude)
+void ADroneBase::RotationMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	if (!ActionsUsed.bRotation)
-	{
-		const float LocalActionValue = FMath::Clamp(ActionValue, -3.0f, 3.0f);
-		FR_TickPower += (LocalActionValue * (-Magnitude));
-		FL_TickPower += (LocalActionValue * Magnitude);
-		BL_TickPower += (LocalActionValue * (-Magnitude));
-		BR_TickPower += (LocalActionValue * Magnitude);
+	//if (!ActionsUsed.bRotation)
+	//{
+	//	const float LocalActionValue = FMath::Clamp(ActionValue, -3.0f, 3.0f);
+	//	FR_TickPower += (LocalActionValue * (-Magnitude));
+	//	FL_TickPower += (LocalActionValue * Magnitude);
+	//	BL_TickPower += (LocalActionValue * (-Magnitude));
+	//	BR_TickPower += (LocalActionValue * Magnitude);
 
-		ActionsUsed.bRotation = true;
-	}
+	//TODO: we not spawning with 0 rotation always, remake this or add to beginplay also
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Rotation: %f"), ActionValue));
+	DesiredValues.Rotation += FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
+	//	ActionsUsed.bRotation = true;
+	//}
+	//DesiredValues.Rotation = GetActorRotation().Yaw + FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
+
 }
 
 void ADroneBase::FrontBackMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	if (!ActionsUsed.bFrontBack)
+	/*if (!ActionsUsed.bFrontBack)
 	{
 		const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
 		if (ActionValue >= 0)
@@ -230,27 +236,31 @@ void ADroneBase::FrontBackMovement(float ActionValue, float Magnitude, float Lim
 		}
 
 		ActionsUsed.bFrontBack = true;
-	}
+	}*/
+
+	//convert [- 1, 1] action value to [-Magnitude, Magnitude]
+	DesiredValues.FrontBack = FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
 }
 
 void ADroneBase::LeftRightMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	if (!ActionsUsed.bLeftRight)
-	{
-		const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
-		if (ActionValue >= 0)
-		{
-			FL_TickPower += (LocalActionValue * Magnitude);
-			BL_TickPower += (LocalActionValue * Magnitude);
-		}
-		else
-		{
-			FR_TickPower += (LocalActionValue * Magnitude);
-			BR_TickPower += (LocalActionValue * Magnitude);
-		}
+	//if (!ActionsUsed.bLeftRight)
+	//{
+	//	const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
+	//	if (ActionValue >= 0)
+	//	{
+	//		FL_TickPower += (LocalActionValue * Magnitude);
+	//		BL_TickPower += (LocalActionValue * Magnitude);
+	//	}
+	//	else
+	//	{
+	//		FR_TickPower += (LocalActionValue * Magnitude);
+	//		BR_TickPower += (LocalActionValue * Magnitude);
+	//	}
 
-		ActionsUsed.bLeftRight = true;
-	}
+	//	ActionsUsed.bLeftRight = true;
+	//}
+	DesiredValues.LeftRight = FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
 }
 
 // Called every frame
@@ -258,15 +268,15 @@ void ADroneBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (HasAuthority())
-	{
+	//if (HasAuthority())
+	//{
 
-		UE_LOG(LogTemp, Display, TEXT("DeltaTime: %f"), DeltaTime);
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("client DeltaTime: %f"), DeltaTime));
-	}
+	//	UE_LOG(LogTemp, Display, TEXT("DeltaTime: %f"), DeltaTime);
+	//}
+	//else
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("client DeltaTime: %f"), DeltaTime));
+	//}
 
 	if (bIsEnginesActivated)
 	{
@@ -334,6 +344,6 @@ void ADroneBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 	DOREPLIFETIME(ADroneBase, bIsStabilizationEnabled);
 	DOREPLIFETIME(ADroneBase, bIsNeuralStabilization);
 	DOREPLIFETIME(ADroneBase, DroneData);
-
+	DOREPLIFETIME(ADroneBase, DesiredValues);
 }
 

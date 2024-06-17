@@ -45,7 +45,7 @@ void UStabilizationComponentBase::BeginPlay()
 	
 }
 
-float UStabilizationComponentBase::PIDFuntion(float CurrentValue, FStabilizationParametersPID Parameters, float DeltaTime, float& Integral, float& ErrorPrior)
+float UStabilizationComponentBase::PIDFuntion(float CurrentValue, float DesiredValue, FStabilizationParametersPID Parameters, float DeltaTime, float& Integral, float& ErrorPrior)
 {
 	
 	//Original variant from tutorial
@@ -59,7 +59,7 @@ float UStabilizationComponentBase::PIDFuntion(float CurrentValue, FStabilization
 	ErrorPrior = PError;
 	return -(Parameters.P * PError + Parameters.I * PIntegral + Parameters.D * PDerivative + Parameters.Bias);*/
 
-	const float PError = CurrentValue - Parameters.DesiredValue;
+	const float PError = CurrentValue - DesiredValue;
 	Integral += PError * DeltaTime;
 	const float PDerivative = (PError - ErrorPrior) / DeltaTime;
 	ErrorPrior = PError;
@@ -70,8 +70,9 @@ float UStabilizationComponentBase::PIDFuntion(float CurrentValue, FStabilization
 void UStabilizationComponentBase::VerticalPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max)
 {
 	if (!AxisDeactivated.bVertical)
-	{		
-		float StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetVelocity().Z, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
+	{
+		//TODO: fix "-70"
+		float StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetVelocity().Z, -70.f, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
 
 		PIDVariables.DeltaBL += StabilizationDelta;
 		PIDVariables.DeltaBR += StabilizationDelta;
@@ -82,40 +83,105 @@ void UStabilizationComponentBase::VerticalPID(ADroneBase* Drone, float DeltaTime
 
 void UStabilizationComponentBase::RotationPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max)
 {
-	if (!AxisDeactivated.bRotation)
-	{
-		float StabilizationDelta =(PIDFuntion(Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
-		float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
-		StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
+	//if (!AxisDeactivated.bRotation)
+	//{
+	//	float StabilizationDelta =(PIDFuntion(Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z, 0.f, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
+	//	float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
+	//	StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
 
-		PIDVariables.DeltaBL += StabilizationDeltaInvert;
-		PIDVariables.DeltaBR += StabilizationDelta;
-		PIDVariables.DeltaFL += StabilizationDelta;
-		PIDVariables.DeltaFR += StabilizationDeltaInvert;
+	//	PIDVariables.DeltaBL += StabilizationDeltaInvert;
+	//	PIDVariables.DeltaBR += StabilizationDelta;
+	//	PIDVariables.DeltaFL += StabilizationDelta;
+	//	PIDVariables.DeltaFR += StabilizationDeltaInvert;
+	//}
+	float StabilizationDelta = 0.f;
+
+	float DesiredValue = 0.f;
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("Rotation: %f"), Drone->DesiredValues.Rotation));
+
+
+	if (int(abs(Drone->DesiredValues.Rotation) / 180.f) % 2)
+	{
+		DesiredValue = FMath::Fmod(Drone->DesiredValues.Rotation, 180.f);
 	}
+	else
+	{
+		DesiredValue = FMath::Fmod(Drone->DesiredValues.Rotation, 180.f);
+		if (DesiredValue > 0)
+		{
+			DesiredValue = -(180.f - DesiredValue);
+		}
+		else
+		{
+			DesiredValue = 180.f + DesiredValue;
+		}
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("DesiredValue: %f"), DesiredValue));
+
+	//TODO: remake this strange if-else construction, find other variants to stabilize when desired rotation and real are too different
+	if ((AxisDeactivated.bRotation || Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z < 10) && (abs(FMath::Fmod(DesiredValue, 360.f) - FMath::Fmod(Drone->GetActorRotation().Yaw, 360.f)) < 135))
+	{
+		StabilizationDelta = (PIDFuntion(Drone->GetActorRotation().Yaw, DesiredValue, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
+	}
+	else
+	{
+		StabilizationDelta = (PIDFuntion(Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z, 0.f, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
+		//Drone->DesiredValues.Rotation = Drone->GetActorRotation().Yaw;
+		//TODO: need to set up new desired rotation when we don't use current but not in this way (this stops drone)
+	}
+	float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
+	StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
+
+	PIDVariables.DeltaBL += StabilizationDeltaInvert;
+	PIDVariables.DeltaBR += StabilizationDelta;
+	PIDVariables.DeltaFL += StabilizationDelta;
+	PIDVariables.DeltaFR += StabilizationDeltaInvert;
 }
 
 void UStabilizationComponentBase::FrontBacklPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max, FSmoothParametersPID SmoothParameters)
 {
-	float LocalMultiplier = Multiplier;
-	float CurrentValue = (Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).X) / SmoothParameters.VelocityDivider + Drone->GetActorRotation().Pitch;
+	//float LocalMultiplier = Multiplier;
+	//float CurrentValue = (Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).X) / SmoothParameters.VelocityDivider + Drone->GetActorRotation().Pitch;
+	//if (AxisDeactivated.bFrontBack)
+	//{
+	//	if (abs(Drone->GetActorRotation().Pitch) > SmoothParameters.Interval1 && abs(Drone->GetActorRotation().Pitch) < SmoothParameters.Interval2)
+	//	{
+	//		LocalMultiplier = ((abs(Drone->GetActorRotation().Pitch) - SmoothParameters.SubtrahendDetlaChanger) / SmoothParameters.DividerDetlaChanger) * Multiplier;
+	//	}
+	//	else if (abs(Drone->GetActorRotation().Pitch) > SmoothParameters.Interval2)
+	//	{
+	//		LocalMultiplier = Multiplier;
+	//	}
+	//	else
+	//	{
+	//		return;
+	//	}
+	//}
+
+	//float StabilizationDelta = (PIDFuntion(CurrentValue, Parameters, DeltaTime, PIDVariables.FrontBackIntegral, PIDVariables.FrontBackErrorPrior) * LocalMultiplier);
+	//float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
+	//StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
+
+	//PIDVariables.DeltaBL += StabilizationDeltaInvert;
+	//PIDVariables.DeltaBR += StabilizationDeltaInvert;
+	//PIDVariables.DeltaFL += StabilizationDelta;
+	//PIDVariables.DeltaFR += StabilizationDelta;
+	float CurrentValue = 0.f;
+	float StabilizationDelta = 0.f;
+
 	if (AxisDeactivated.bFrontBack)
 	{
-		if (abs(Drone->GetActorRotation().Pitch) > SmoothParameters.Interval1 && abs(Drone->GetActorRotation().Pitch) < SmoothParameters.Interval2)
-		{
-			LocalMultiplier = ((abs(Drone->GetActorRotation().Pitch) - SmoothParameters.SubtrahendDetlaChanger) / SmoothParameters.DividerDetlaChanger) * Multiplier;
-		}
-		else if (abs(Drone->GetActorRotation().Pitch) > SmoothParameters.Interval2)
-		{
-			LocalMultiplier = Multiplier;
-		}
-		else
-		{
-			return;
-		}
+		CurrentValue = Drone->GetActorRotation().Pitch;
+		StabilizationDelta = (PIDFuntion(CurrentValue, Drone->DesiredValues.FrontBack, Parameters, DeltaTime, PIDVariables.FrontBackIntegral, PIDVariables.FrontBackErrorPrior) * Multiplier);
+	}
+	else
+	{
+		CurrentValue = (Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).X) / SmoothParameters.VelocityDivider + Drone->GetActorRotation().Pitch;
+		StabilizationDelta = (PIDFuntion(CurrentValue, 0.f, Parameters, DeltaTime, PIDVariables.FrontBackIntegral, PIDVariables.FrontBackErrorPrior) * Multiplier);
 	}
 
-	float StabilizationDelta = (PIDFuntion(CurrentValue, Parameters, DeltaTime, PIDVariables.FrontBackIntegral, PIDVariables.FrontBackErrorPrior) * LocalMultiplier);
 	float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
 	StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
 
@@ -123,31 +189,52 @@ void UStabilizationComponentBase::FrontBacklPID(ADroneBase* Drone, float DeltaTi
 	PIDVariables.DeltaBR += StabilizationDeltaInvert;
 	PIDVariables.DeltaFL += StabilizationDelta;
 	PIDVariables.DeltaFR += StabilizationDelta;
-
 }
 
 
 void UStabilizationComponentBase::LeftRightPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max, FSmoothParametersPID SmoothParameters)
 {
-	float LocalMultiplier = Multiplier;
-	float CurrentValue = (Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).Y) / SmoothParameters.VelocityDivider + Drone->GetActorRotation().Roll;
+	//float LocalMultiplier = Multiplier;
+	//float CurrentValue = (Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).Y) / SmoothParameters.VelocityDivider + Drone->GetActorRotation().Roll;
+	//if (AxisDeactivated.bLeftRight)
+	//{
+	//	if (abs(Drone->GetActorRotation().Roll) > SmoothParameters.Interval1 && abs(Drone->GetActorRotation().Roll) < SmoothParameters.Interval2)
+	//	{
+	//		LocalMultiplier = ((abs(Drone->GetActorRotation().Roll) - SmoothParameters.SubtrahendDetlaChanger) / SmoothParameters.DividerDetlaChanger) * Multiplier;
+	//	}
+	//	else if (abs(Drone->GetActorRotation().Roll) > SmoothParameters.Interval2)
+	//	{
+	//		LocalMultiplier = Multiplier;
+	//	}
+	//	else
+	//	{
+	//		return;
+	//	}
+	//}
+
+	//float StabilizationDelta = (PIDFuntion(CurrentValue, Parameters, DeltaTime, PIDVariables.LeftRightIntegral, PIDVariables.LeftRightErrorPrior) * LocalMultiplier);
+	//float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
+	//StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
+
+	//PIDVariables.DeltaBL += StabilizationDelta;
+	//PIDVariables.DeltaBR += StabilizationDeltaInvert;
+	//PIDVariables.DeltaFL += StabilizationDelta;
+	//PIDVariables.DeltaFR += StabilizationDeltaInvert;
+
+	float CurrentValue = 0.f;
+	float StabilizationDelta = 0.f;
+
 	if (AxisDeactivated.bLeftRight)
 	{
-		if (abs(Drone->GetActorRotation().Roll) > SmoothParameters.Interval1 && abs(Drone->GetActorRotation().Roll) < SmoothParameters.Interval2)
-		{
-			LocalMultiplier = ((abs(Drone->GetActorRotation().Roll) - SmoothParameters.SubtrahendDetlaChanger) / SmoothParameters.DividerDetlaChanger) * Multiplier;
-		}
-		else if (abs(Drone->GetActorRotation().Roll) > SmoothParameters.Interval2)
-		{
-			LocalMultiplier = Multiplier;
-		}
-		else
-		{
-			return;
-		}
+		CurrentValue = Drone->GetActorRotation().Roll;
+		StabilizationDelta = (PIDFuntion(CurrentValue, Drone->DesiredValues.LeftRight, Parameters, DeltaTime, PIDVariables.LeftRightIntegral, PIDVariables.LeftRightErrorPrior) * Multiplier);
+	}
+	else
+	{
+		CurrentValue = (Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).Y) / SmoothParameters.VelocityDivider + Drone->GetActorRotation().Roll;
+		StabilizationDelta = (PIDFuntion(CurrentValue, 0.f, Parameters, DeltaTime, PIDVariables.LeftRightIntegral, PIDVariables.LeftRightErrorPrior) * Multiplier);
 	}
 
-	float StabilizationDelta = (PIDFuntion(CurrentValue, Parameters, DeltaTime, PIDVariables.LeftRightIntegral, PIDVariables.LeftRightErrorPrior) * LocalMultiplier);
 	float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
 	StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
 

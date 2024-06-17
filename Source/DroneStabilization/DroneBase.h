@@ -37,6 +37,27 @@ struct FActionsUsed
 	bool bFrontBack = false;
 };
 
+USTRUCT(BlueprintType)
+struct FDesiredMovementValues
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float Vertical = 0.0f;
+
+	// Yaw (Z rotation)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float Rotation = 0.0f;
+
+	// Pitch (Y rotation)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float FrontBack = 0.0f;
+
+	// Roll (X rotation)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float LeftRight = 0.0f;
+};
+
 UCLASS()
 class DRONESTABILIZATION_API ADroneBase : public APawn, public IAbilitySystemInterface
 {
@@ -76,10 +97,10 @@ public:
 	void OnAddRandomImpulse();
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
-	void VerticalMovement(float ActionValue, float Magnitude);
+	void VerticalMovement(float ActionValue, float Magnitude, float Limiter);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
-	void RotationMovement(float ActionValue, float Magnitude);
+	void RotationMovement(float ActionValue, float Magnitude, float Limiter);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void FrontBackMovement(float ActionValue, float Magnitude, float Limiter);
@@ -106,6 +127,9 @@ protected:
 
 public:
 	FActionsUsed ActionsUsed;
+
+	UPROPERTY(Replicated)
+	FDesiredMovementValues DesiredValues;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<USkeletalMeshComponent> DroneMesh;
