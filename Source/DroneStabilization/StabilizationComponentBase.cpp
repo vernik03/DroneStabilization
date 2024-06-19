@@ -96,40 +96,50 @@ void UStabilizationComponentBase::RotationPID(ADroneBase* Drone, float DeltaTime
 	//}
 	float StabilizationDelta = 0.f;
 
-	float DesiredValue = 0.f;
+	float DesiredValue = Drone->DesiredValues.Rotation;
 
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("Rotation: %f"), Drone->DesiredValues.Rotation));
+	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("Rotation: %f"), Drone->DesiredValues.Rotation));
 
 
-	if (int(abs(Drone->DesiredValues.Rotation) / 180.f) % 2)
+	//if (int(abs(Drone->DesiredValues.Rotation) / 180.f) % 2)
+	//{
+	//	DesiredValue = FMath::Fmod(Drone->DesiredValues.Rotation, 180.f);
+	//}
+	//else
+	//{
+	//	DesiredValue = FMath::Fmod(Drone->DesiredValues.Rotation, 180.f);
+	//	if (DesiredValue > 0)
+	//	{
+	//		DesiredValue = -(180.f - DesiredValue);
+	//	}
+	//	else
+	//	{
+	//		DesiredValue = 180.f + DesiredValue;
+	//	}
+	//}
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("DesiredValue: %f"), DesiredValue));
+
+
+	//TODO: we need direction stabilization on very high speed and on very low, to move straight and not rotate randomly on place
+	if ((!AxisDeactivated.bRotation && Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z < 10) || Drone->DroneMesh->GetComponentVelocity().X > 1500 || Drone->DroneMesh->GetComponentVelocity().Y > 1500)
+	//(abs(FMath::Fmod(DesiredValue, 360.f) - FMath::Fmod(Drone->GetActorRotation().Yaw, 360.f)) < 135
 	{
-		DesiredValue = FMath::Fmod(Drone->DesiredValues.Rotation, 180.f);
-	}
-	else
-	{
-		DesiredValue = FMath::Fmod(Drone->DesiredValues.Rotation, 180.f);
-		if (DesiredValue > 0)
+		//TODO: this is really bad. And not working with +-170 degrees (rotates infinitely). This 200 is unattainable value, like "switch"
+		if (Drone->DesiredValues.Rotation == 200)
 		{
-			DesiredValue = -(180.f - DesiredValue);
-		}
-		else
-		{
-			DesiredValue = 180.f + DesiredValue;
-		}
-	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("DesiredValue: %f"), DesiredValue));
-
-	//TODO: remake this strange if-else construction, find other variants to stabilize when desired rotation and real are too different
-	if ((AxisDeactivated.bRotation || Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z < 10) && (abs(FMath::Fmod(DesiredValue, 360.f) - FMath::Fmod(Drone->GetActorRotation().Yaw, 360.f)) < 135))
-	{
+			Drone->DesiredValues.Rotation = Drone->GetActorRotation().Yaw;
+		}		
 		StabilizationDelta = (PIDFuntion(Drone->GetActorRotation().Yaw, DesiredValue, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
 	}
+	else if (!AxisDeactivated.bRotation)
+	{
+		Drone->DesiredValues.Rotation = 200;
+		StabilizationDelta = (PIDFuntion(Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z, 0.f, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
+	}
 	else
 	{
-		StabilizationDelta = (PIDFuntion(Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z, 0.f, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
-		//Drone->DesiredValues.Rotation = Drone->GetActorRotation().Yaw;
-		//TODO: need to set up new desired rotation when we don't use current but not in this way (this stops drone)
+		Drone->DesiredValues.Rotation = 200;
 	}
 	float StabilizationDeltaInvert = FMath::Clamp(-StabilizationDelta, Min, Max);
 	StabilizationDelta = FMath::Clamp(StabilizationDelta, Min, Max);
@@ -335,6 +345,19 @@ void UStabilizationComponentBase::ResetAxisDeactivated()
 	AxisDeactivated.bLeftRight = false;
 	AxisDeactivated.bRotation = false;
 	AxisDeactivated.bVertical = false;
+
+	PIDVariables.VerticalIntegral = 0.0f;
+	PIDVariables.VerticalErrorPrior = 0.0f;
+	PIDVariables.RotationIntegral = 0.0f;
+	PIDVariables.RotationErrorPrior = 0.0f;
+	PIDVariables.FrontBackIntegral = 0.0f;
+	PIDVariables.FrontBackErrorPrior = 0.0f;
+	PIDVariables.LeftRightIntegral = 0.0f;
+	PIDVariables.LeftRightErrorPrior = 0.0f;
+	PIDVariables.DeltaFL = 0.0f;
+	PIDVariables.DeltaFR = 0.0f;
+	PIDVariables.DeltaBL = 0.0f;
+	PIDVariables.DeltaBR = 0.0f;
 }
 
 

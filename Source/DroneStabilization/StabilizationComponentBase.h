@@ -3,18 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
 #include "DroneBase.h"
+#include "Components/ActorComponent.h"
 #include "StabilizationComponentBase.generated.h"
 
-UENUM(BlueprintType)
-enum class EActions : uint8
-{
-	Vertical,
-	Rotation,
-	LeftRight,
-	FrontBack
-};
 
 USTRUCT(BlueprintType)
 struct FStabilizationParametersPID

@@ -189,7 +189,7 @@ void ADroneBase::VerticalMovement(float ActionValue, float Magnitude, float Limi
 {
 	if (!ActionsUsed.bVertical)
 	{
-		float LocalActionValue = FMath::Clamp(ActionValue, -10.0f, 3.0f);
+		float LocalActionValue = FMath::Clamp(ActionValue, -Limiter, Limiter);
 		LocalActionValue = LocalActionValue * Magnitude;
 		FR_TickPower = FMath::Clamp(LocalActionValue + FR_TickPower, -ThrustStrengthBase, 10000);
 		FL_TickPower = FMath::Clamp(LocalActionValue + FL_TickPower, -ThrustStrengthBase, 10000);
@@ -202,20 +202,19 @@ void ADroneBase::VerticalMovement(float ActionValue, float Magnitude, float Limi
 
 void ADroneBase::RotationMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	//if (!ActionsUsed.bRotation)
-	//{
-	//	const float LocalActionValue = FMath::Clamp(ActionValue, -3.0f, 3.0f);
-	//	FR_TickPower += (LocalActionValue * (-Magnitude));
-	//	FL_TickPower += (LocalActionValue * Magnitude);
-	//	BL_TickPower += (LocalActionValue * (-Magnitude));
-	//	BR_TickPower += (LocalActionValue * Magnitude);
+	if (!ActionsUsed.bRotation)
+	{
+		const float LocalActionValue = FMath::Clamp(ActionValue, -Limiter, Limiter);
+		FR_TickPower += (LocalActionValue * (-Magnitude));
+		FL_TickPower += (LocalActionValue * Magnitude);
+		BL_TickPower += (LocalActionValue * (-Magnitude));
+		BR_TickPower += (LocalActionValue * Magnitude);
 
-	//TODO: we not spawning with 0 rotation always, remake this or add to beginplay also
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Rotation: %f"), ActionValue));
-	DesiredValues.Rotation += FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
-	//	ActionsUsed.bRotation = true;
-	//}
-	//DesiredValues.Rotation = GetActorRotation().Yaw + FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Rotation: %f"), ActionValue));
+	//DesiredValues.Rotation += FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
+		ActionsUsed.bRotation = true;
+	}
 
 }
 
@@ -261,6 +260,27 @@ void ADroneBase::LeftRightMovement(float ActionValue, float Magnitude, float Lim
 	//	ActionsUsed.bLeftRight = true;
 	//}
 	DesiredValues.LeftRight = FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
+}
+
+void ADroneBase::SetDesiredValues(EActions Axis, float Value)
+{
+	switch (Axis)
+	{
+	case EActions::Vertical:
+		DesiredValues.Vertical = Value;
+		break;
+	case EActions::Rotation:
+		DesiredValues.Rotation = Value;
+		break;
+	case EActions::LeftRight:
+		DesiredValues.LeftRight = Value;
+		break;
+	case EActions::FrontBack:
+		DesiredValues.FrontBack = Value;
+		break;
+	default:
+		break;
+	}
 }
 
 // Called every frame

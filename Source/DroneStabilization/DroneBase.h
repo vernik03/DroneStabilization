@@ -19,6 +19,16 @@ class UAttributeSetBase;
 class UGameplayAbility;
 class UGameplayEffect;
 
+
+UENUM(BlueprintType)
+enum class EActions : uint8
+{
+	Vertical,
+	Rotation,
+	LeftRight,
+	FrontBack
+};
+
 USTRUCT(BlueprintType)
 struct FActionsUsed
 {
@@ -108,6 +118,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void LeftRightMovement(float ActionValue, float Magnitude, float Limiter);
 
+	UFUNCTION(BlueprintCallable)
+	void SetDesiredValues(EActions Axis, float Value);
+
+
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -128,7 +143,7 @@ protected:
 public:
 	FActionsUsed ActionsUsed;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere,Replicated)
 	FDesiredMovementValues DesiredValues;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
