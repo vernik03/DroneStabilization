@@ -122,17 +122,18 @@ void UStabilizationComponentBase::RotationPID(ADroneBase* Drone, float DeltaTime
 
 
 	//TODO: we need direction stabilization on very high speed and on very low, to move straight and not rotate randomly on place
-	if ((!AxisDeactivated.bRotation && Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z < 10) || Drone->DroneMesh->GetComponentVelocity().X > 1500 || Drone->DroneMesh->GetComponentVelocity().Y > 1500)
-	//(abs(FMath::Fmod(DesiredValue, 360.f) - FMath::Fmod(Drone->GetActorRotation().Yaw, 360.f)) < 135
-	{
-		//TODO: this is really bad. And not working with +-170 degrees (rotates infinitely). This 200 is unattainable value, like "switch"
-		if (Drone->DesiredValues.Rotation == 200)
-		{
-			Drone->DesiredValues.Rotation = Drone->GetActorRotation().Yaw;
-		}		
-		StabilizationDelta = (PIDFuntion(Drone->GetActorRotation().Yaw, DesiredValue, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
-	}
-	else if (!AxisDeactivated.bRotation)
+	//if ((!AxisDeactivated.bRotation && Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z < 10) || Drone->DroneMesh->GetComponentVelocity().X > 1500 || Drone->DroneMesh->GetComponentVelocity().Y > 1500)
+	////(abs(FMath::Fmod(DesiredValue, 360.f) - FMath::Fmod(Drone->GetActorRotation().Yaw, 360.f)) < 135
+	//{
+	//	//TODO: this is really bad. And not working with +-170 degrees (rotates infinitely). This 200 is unattainable value, like "switch"
+	//	if (Drone->DesiredValues.Rotation == 200)
+	//	{
+	//		Drone->DesiredValues.Rotation = Drone->GetActorRotation().Yaw;
+	//	}		
+	//	StabilizationDelta = (PIDFuntion(Drone->GetActorRotation().Yaw, DesiredValue, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
+	//}
+	//else 
+		if (!AxisDeactivated.bRotation)
 	{
 		Drone->DesiredValues.Rotation = 200;
 		StabilizationDelta = (PIDFuntion(Drone->DroneMesh->GetPhysicsAngularVelocityInDegrees().Z, 0.f, Parameters, DeltaTime, PIDVariables.RotationIntegral, PIDVariables.RotationErrorPrior) * Multiplier);
