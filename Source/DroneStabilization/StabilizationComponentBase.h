@@ -182,10 +182,10 @@ protected:
 	void RotationPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max);
 
 	UFUNCTION(BlueprintCallable)
-	void FrontBacklPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max, FSmoothParametersPID SmoothParameters);
+	void FrontBacklPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float MaxMultiplier, float Min, float Max, FSmoothParametersPID SmoothParameters);
 
 	UFUNCTION(BlueprintCallable)
-	void LeftRightPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max, FSmoothParametersPID SmoothParameters);
+	void LeftRightPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float MaxMultiplier, float Min, float Max, FSmoothParametersPID SmoothParameters);
 
 	UFUNCTION(BlueprintCallable)
 	void ApplyPID(ADroneBase* Drone, float Scale, float Min, float Max);
@@ -198,6 +198,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void ApplyML(ADroneBase* Drone, float Scale, float Delta, float Min, float Max);
+
+	UFUNCTION(BlueprintPure)
+	float GetMultiplierByCurve(UCurveLinearColor* Curve, ADroneBase* Drone, float Min, float Max);
 
 public:	
 	// Called every frame
