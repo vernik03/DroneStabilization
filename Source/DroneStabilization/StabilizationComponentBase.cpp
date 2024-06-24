@@ -349,8 +349,8 @@ float UStabilizationComponentBase::GetMultiplierByCurve(UCurveLinearColor* Curve
 	float B = Curve->GetUnadjustedLinearColorValue(abs(Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).X)).B;
 	float A = Curve->GetUnadjustedLinearColorValue(abs(Drone->GetActorRotation().UnrotateVector(Drone->GetVelocity()).Y)).A;
 
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("R: %f, G: %f, B: %f, A: %f"), R, G, B, A));
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("result: %f"), FMath::Clamp((R + G + B + A) / 4, 0, 10000)));
+	/*GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("R: %f, G: %f, B: %f, A: %f"), R, G, B, A));
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("result: %f"), FMath::Clamp((R + G + B + A) / 4, 0, 10000)));*/
 	return FMath::Clamp((R + G + B + A) / 4, 0, 10000);
 }
 
