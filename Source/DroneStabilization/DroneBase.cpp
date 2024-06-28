@@ -290,8 +290,7 @@ void ADroneBase::Tick(float DeltaTime)
 
 	//if (HasAuthority())
 	//{
-
-	//	UE_LOG(LogTemp, Display, TEXT("DeltaTime: %f"), DeltaTime);
+	// UE_LOG(LogTemp, Display, TEXT("DeltaTime: %f"), DeltaTime);
 	//}
 	//else
 	//{
