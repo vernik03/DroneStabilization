@@ -166,8 +166,14 @@ void ADroneBase::ResetDrone()
 	DroneMesh->SetSimulatePhysics(false);
 	DroneMesh->SetPhysicsLinearVelocity(FVector(0, 0, 0));
 	DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
-	SetActorLocation(StartLocation);
+	//SetActorLocation(StartLocation);
+	FVector NewLocation = GetActorLocation();
+	NewLocation.Z = NewLocation.Z + 200;
+	SetActorLocation(NewLocation);	
+	//SetActorRotation(FRotator(0, 0, 0));
+	
 	SetActorRotation(FRotator(0, 0, 0));
+
 	DroneMesh->ResetAllBodiesSimulatePhysics();
 	StabilizationComponent->ResetAxisDeactivated();
 	FR_TickPower = 0.0f;
