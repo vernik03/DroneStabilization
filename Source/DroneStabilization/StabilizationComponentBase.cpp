@@ -68,29 +68,31 @@ float UStabilizationComponentBase::PIDFuntion(float CurrentValue, float DesiredV
 	return -(Parameters.P * PError + Parameters.I * Integral + Parameters.D * PDerivative + Parameters.Bias);
 }
 
-void UStabilizationComponentBase::VerticalPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max, float FirstPoint, float SecondPoint)
+void UStabilizationComponentBase::VerticalPID(ADroneBase* Drone, float DeltaTime, float DesiredValue, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max)
 {
 	if (!AxisDeactivated.bVertical)
 	{
-		float StabilizationDelta = 0.0f;
-		if (abs(Drone->GetVelocity().Z) < FirstPoint)
-		{
-			if (!DesiredVerticalSet)
-			{
-				DesiredVerticalSet = true;
-				DesiredVertical = Drone->GetActorLocation().Z;
-			}
-			StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetActorLocation().Z, DesiredVertical, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
-		}
-		else if (abs(Drone->GetVelocity().Z) > SecondPoint)
-		{
-			DesiredVerticalSet = false;
-			StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetVelocity().Z, 0.f, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
-		}
-		else
-		{
-			StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetActorLocation().Z, DesiredVertical, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
-		}
+		//float StabilizationDelta = 0.0f;
+		//if (abs(Drone->GetVelocity().Z) < FirstPoint)
+		//{
+		//	if (!DesiredVerticalSet)
+		//	{
+		//		DesiredVerticalSet = true;
+		//		DesiredVertical = Drone->GetActorLocation().Z;
+		//	}
+		//	StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetActorLocation().Z, DesiredVertical, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
+		//}
+		//else if (abs(Drone->GetVelocity().Z) > SecondPoint)
+		//{
+		//	DesiredVerticalSet = false;
+		//	StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetVelocity().Z, 0.f, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
+		//}
+		//else
+		//{
+		//	StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetActorLocation().Z, DesiredVertical, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
+		//}
+
+		float StabilizationDelta = FMath::Clamp((PIDFuntion(Drone->GetVelocity().Z, DesiredValue, Parameters, DeltaTime, PIDVariables.VerticalIntegral, PIDVariables.VerticalErrorPrior) * Multiplier), Min, Max);
 
 
 		PIDVariables.DeltaBL += StabilizationDelta;

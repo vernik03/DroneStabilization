@@ -176,7 +176,7 @@ protected:
 	float PIDFuntion(float CurrentValue, float DesiredValue, FStabilizationParametersPID Parameters, float DeltaTime, float& Integral, float& ErrorPrior);
 
 	UFUNCTION(BlueprintCallable)
-	void VerticalPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max, float FirstPoint, float SecondPoint);
+	void VerticalPID(ADroneBase* Drone, float DeltaTime, float DesiredValue, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max);
 
 	UFUNCTION(BlueprintCallable)
 	void RotationPID(ADroneBase* Drone, float DeltaTime, FStabilizationParametersPID Parameters, float Multiplier, float Min, float Max);
