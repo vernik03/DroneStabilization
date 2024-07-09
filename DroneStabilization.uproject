@@ -37,10 +37,6 @@
 		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
-		},
-		{
-			"Name": "GPULightmass",
-			"Enabled": true
 		}
 	]
 }
