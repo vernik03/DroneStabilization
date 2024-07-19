@@ -166,11 +166,9 @@ void ADroneBase::ResetDrone()
 	DroneMesh->SetSimulatePhysics(false);
 	DroneMesh->SetPhysicsLinearVelocity(FVector(0, 0, 0));
 	DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector(0, 0, 0));
-	//SetActorLocation(StartLocation);
 	FVector NewLocation = GetActorLocation();
 	NewLocation.Z = NewLocation.Z + 200;
 	SetActorLocation(NewLocation);	
-	//SetActorRotation(FRotator(0, 0, 0));
 	
 	SetActorRotation(FRotator(0, 0, 0));
 
@@ -216,9 +214,6 @@ void ADroneBase::RotationMovement(float ActionValue, float Magnitude, float Limi
 		BL_TickPower += (LocalActionValue * (-Magnitude));
 		BR_TickPower += (LocalActionValue * Magnitude);
 
-
-	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Rotation: %f"), ActionValue));
-	//DesiredValues.Rotation += FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
 		ActionsUsed.bRotation = true;
 	}
 
@@ -226,45 +221,11 @@ void ADroneBase::RotationMovement(float ActionValue, float Magnitude, float Limi
 
 void ADroneBase::FrontBackMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	/*if (!ActionsUsed.bFrontBack)
-	{
-		const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
-		if (ActionValue >= 0)
-		{
-			FR_TickPower += (LocalActionValue * Magnitude);
-			FL_TickPower += (LocalActionValue * Magnitude);		
-		}
-		else
-		{
-			BL_TickPower += (LocalActionValue * Magnitude);
-			BR_TickPower += (LocalActionValue * Magnitude);
-		}
-
-		ActionsUsed.bFrontBack = true;
-	}*/
-
-	//convert [- 1, 1] action value to [-Magnitude, Magnitude]
 	DesiredValues.FrontBack = FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
 }
 
 void ADroneBase::LeftRightMovement(float ActionValue, float Magnitude, float Limiter)
 {
-	//if (!ActionsUsed.bLeftRight)
-	//{
-	//	const float LocalActionValue = abs(FMath::Clamp(ActionValue, -Limiter, Limiter));
-	//	if (ActionValue >= 0)
-	//	{
-	//		FL_TickPower += (LocalActionValue * Magnitude);
-	//		BL_TickPower += (LocalActionValue * Magnitude);
-	//	}
-	//	else
-	//	{
-	//		FR_TickPower += (LocalActionValue * Magnitude);
-	//		BR_TickPower += (LocalActionValue * Magnitude);
-	//	}
-
-	//	ActionsUsed.bLeftRight = true;
-	//}
 	DesiredValues.LeftRight = FMath::Clamp(ActionValue, -Limiter, Limiter) * Magnitude;
 }
 
@@ -293,15 +254,6 @@ void ADroneBase::SetDesiredValues(EActions Axis, float Value)
 void ADroneBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//if (HasAuthority())
-	//{
-	// UE_LOG(LogTemp, Display, TEXT("DeltaTime: %f"), DeltaTime);
-	//}
-	//else
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, FString::Printf(TEXT("client DeltaTime: %f"), DeltaTime));
-	//}
 
 	if (bIsEnginesActivated)
 	{
