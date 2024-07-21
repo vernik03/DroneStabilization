@@ -212,6 +212,10 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
-		
+	UFUNCTION(BlueprintImplementableEvent)
+	void CustomPreTickEvent(float DeltaTime);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void CustomPostTickEvent(float DeltaTime);
 	
 };

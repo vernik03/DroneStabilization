@@ -255,8 +255,13 @@ void ADroneBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	
+
 	if (bIsEnginesActivated)
 	{
+
+		StabilizationComponent->CustomPreTickEvent(DeltaTime);
+
 		PhysicsThrusterFR->ThrustStrength = ThrustStrengthBase + FR_TickPower;
 		PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase + FL_TickPower;
 		PhysicsThrusterBL->ThrustStrength = ThrustStrengthBase + BL_TickPower;
@@ -281,6 +286,8 @@ void ADroneBase::Tick(float DeltaTime)
 		ActionsUsed.bRotation = false;
 		ActionsUsed.bFrontBack = false;
 		ActionsUsed.bLeftRight = false;
+
+		StabilizationComponent->CustomPostTickEvent(DeltaTime);
 	}
 	if (bIsEnginesActivated && !HasAuthority())
 	{
