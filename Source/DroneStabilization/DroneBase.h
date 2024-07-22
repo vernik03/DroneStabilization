@@ -176,6 +176,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
 	float BL_TickPower = 0.0f;
 
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
+	float VerticalAdditionalPower = 0.0f;
+
+	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Engines")
+	float RotationAdditionalPower = 0.0f;
+
 	UPROPERTY(BlueprintReadWrite, Replicated, Category = "Parameters")
 	FVector StartLocation;
 

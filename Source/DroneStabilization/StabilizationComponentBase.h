@@ -211,11 +211,5 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void CustomPreTickEvent(float DeltaTime);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void CustomPostTickEvent(float DeltaTime);
 	
 };

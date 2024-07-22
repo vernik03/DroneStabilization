@@ -195,6 +195,8 @@ void ADroneBase::VerticalMovement(float ActionValue, float Magnitude, float Limi
 	{
 		float LocalActionValue = FMath::Clamp(ActionValue, -Limiter, Limiter);
 		LocalActionValue = LocalActionValue * Magnitude;
+		VerticalAdditionalPower = FMath::Clamp(LocalActionValue, -2 * ThrustStrengthBase, 10000);
+
 		FR_TickPower = FMath::Clamp(LocalActionValue + FR_TickPower, -3*ThrustStrengthBase, 10000);
 		FL_TickPower = FMath::Clamp(LocalActionValue + FL_TickPower, -3*ThrustStrengthBase, 10000);
 		BL_TickPower = FMath::Clamp(LocalActionValue + BL_TickPower, -3*ThrustStrengthBase, 10000);
@@ -209,6 +211,8 @@ void ADroneBase::RotationMovement(float ActionValue, float Magnitude, float Limi
 	if (!ActionsUsed.bRotation)
 	{
 		const float LocalActionValue = FMath::Clamp(ActionValue, -Limiter, Limiter);
+		RotationAdditionalPower = LocalActionValue * Magnitude;
+
 		FR_TickPower += (LocalActionValue * (-Magnitude));
 		FL_TickPower += (LocalActionValue * Magnitude);
 		BL_TickPower += (LocalActionValue * (-Magnitude));
@@ -260,12 +264,14 @@ void ADroneBase::Tick(float DeltaTime)
 	if (bIsEnginesActivated)
 	{
 
-		//StabilizationComponent->CustomPreTickEvent(DeltaTime);
-
-		PhysicsThrusterFR->ThrustStrength = ThrustStrengthBase + FR_TickPower;
-		PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase + FL_TickPower;
-		PhysicsThrusterBL->ThrustStrength = ThrustStrengthBase + BL_TickPower;
-		PhysicsThrusterBR->ThrustStrength = ThrustStrengthBase + BR_TickPower;
+		PhysicsThrusterFR->ThrustStrength = ThrustStrengthBase + FR_TickPower
+			+ VerticalAdditionalPower - RotationAdditionalPower;
+		PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase + FL_TickPower
+			+ VerticalAdditionalPower + RotationAdditionalPower;
+		PhysicsThrusterBL->ThrustStrength = ThrustStrengthBase + BL_TickPower
+			+ VerticalAdditionalPower - RotationAdditionalPower;
+		PhysicsThrusterBR->ThrustStrength = ThrustStrengthBase + BR_TickPower
+			+ VerticalAdditionalPower + RotationAdditionalPower;
 
 		float TorqueFR = (FR_TickPower * AdditionalRotationPowerFirst + ThrustStrengthBase) * -AdditionalRotationPowerSecond;
 		float TorqueFL = (FL_TickPower * AdditionalRotationPowerFirst + ThrustStrengthBase) * AdditionalRotationPowerSecond;
@@ -286,8 +292,6 @@ void ADroneBase::Tick(float DeltaTime)
 		ActionsUsed.bRotation = false;
 		ActionsUsed.bFrontBack = false;
 		ActionsUsed.bLeftRight = false;
-
-		//StabilizationComponent->CustomPostTickEvent(DeltaTime);
 	}
 	if (bIsEnginesActivated && !HasAuthority())
 	{
