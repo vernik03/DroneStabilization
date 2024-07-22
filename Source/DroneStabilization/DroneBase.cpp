@@ -195,10 +195,10 @@ void ADroneBase::VerticalMovement(float ActionValue, float Magnitude, float Limi
 	{
 		float LocalActionValue = FMath::Clamp(ActionValue, -Limiter, Limiter);
 		LocalActionValue = LocalActionValue * Magnitude;
-		FR_TickPower = FMath::Clamp(LocalActionValue + FR_TickPower, -ThrustStrengthBase, 10000);
-		FL_TickPower = FMath::Clamp(LocalActionValue + FL_TickPower, -ThrustStrengthBase, 10000);
-		BL_TickPower = FMath::Clamp(LocalActionValue + BL_TickPower, -ThrustStrengthBase, 10000);
-		BR_TickPower = FMath::Clamp(LocalActionValue + BR_TickPower, -ThrustStrengthBase, 10000);
+		FR_TickPower = FMath::Clamp(LocalActionValue + FR_TickPower, -3*ThrustStrengthBase, 10000);
+		FL_TickPower = FMath::Clamp(LocalActionValue + FL_TickPower, -3*ThrustStrengthBase, 10000);
+		BL_TickPower = FMath::Clamp(LocalActionValue + BL_TickPower, -3*ThrustStrengthBase, 10000);
+		BR_TickPower = FMath::Clamp(LocalActionValue + BR_TickPower, -3*ThrustStrengthBase, 10000);
 
 		ActionsUsed.bVertical = true;
 	}
@@ -260,7 +260,7 @@ void ADroneBase::Tick(float DeltaTime)
 	if (bIsEnginesActivated)
 	{
 
-		StabilizationComponent->CustomPreTickEvent(DeltaTime);
+		//StabilizationComponent->CustomPreTickEvent(DeltaTime);
 
 		PhysicsThrusterFR->ThrustStrength = ThrustStrengthBase + FR_TickPower;
 		PhysicsThrusterFL->ThrustStrength = ThrustStrengthBase + FL_TickPower;
@@ -287,7 +287,7 @@ void ADroneBase::Tick(float DeltaTime)
 		ActionsUsed.bFrontBack = false;
 		ActionsUsed.bLeftRight = false;
 
-		StabilizationComponent->CustomPostTickEvent(DeltaTime);
+		//StabilizationComponent->CustomPostTickEvent(DeltaTime);
 	}
 	if (bIsEnginesActivated && !HasAuthority())
 	{
